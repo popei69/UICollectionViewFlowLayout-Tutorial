@@ -12,12 +12,30 @@ import UIKit
 enum CollectionDisplay {
     case inline
     case list
-    case grid
+    case grid(columns: Int)
+}
+
+extension CollectionDisplay : Equatable {
+    
+    public static func == (lhs: CollectionDisplay, rhs: CollectionDisplay) -> Bool {
+        
+        switch (lhs, rhs) {
+        case (.inline, .inline), 
+             (.list, .list):
+            return true
+            
+        case (.grid(let lColumn), .grid(let rColumn)):
+            return lColumn == rColumn
+            
+        default:
+            return false
+        }
+    }
 }
 
 class CustomCollectionViewFlowLayout : UICollectionViewFlowLayout {
     
-    var display : CollectionDisplay = .grid {
+    var display : CollectionDisplay = .list {
         didSet {
             if display != oldValue {
                 self.invalidateLayout()
@@ -25,10 +43,19 @@ class CustomCollectionViewFlowLayout : UICollectionViewFlowLayout {
         }
     }
     
-    convenience init(display: CollectionDisplay) {
+    var containerWidth: CGFloat = 0.0 {
+        didSet {
+            if containerWidth != oldValue {
+                self.invalidateLayout()
+            }
+        }
+    }
+    
+    convenience init(display: CollectionDisplay, containerWidth: CGFloat) {
         self.init()
         
         self.display = display
+        self.containerWidth = containerWidth
         self.minimumLineSpacing = 10
         self.minimumInteritemSpacing = 10
         self.configLayout()
@@ -38,23 +65,17 @@ class CustomCollectionViewFlowLayout : UICollectionViewFlowLayout {
         switch display {
         case .inline:
             self.scrollDirection = .horizontal
-            if let collectionView = self.collectionView {
-                self.itemSize = CGSize(width: collectionView.frame.width * 0.9, height: 300)
-            }
+            self.itemSize = CGSize(width: containerWidth * 0.9, height: 300)
             
-        case .grid:
-            
+        case .grid(let column):
             self.scrollDirection = .vertical
-            if let collectionView = self.collectionView {
-                let optimisedWidth = (collectionView.frame.width - minimumInteritemSpacing) / 2
-                self.itemSize = CGSize(width: optimisedWidth , height: optimisedWidth) // keep as square
-            }
+            let spacing = CGFloat(column - 1) * minimumLineSpacing
+            let optimisedWidth = (containerWidth - spacing) / CGFloat(column)
+            self.itemSize = CGSize(width: optimisedWidth , height: optimisedWidth) // keep as square
             
         case .list:
             self.scrollDirection = .vertical
-            if let collectionView = self.collectionView {
-                self.itemSize = CGSize(width: collectionView.frame.width , height: 130)
-            }
+            self.itemSize = CGSize(width: containerWidth, height: 130)
         }
     }
     

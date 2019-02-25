@@ -13,7 +13,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var collectionView : UICollectionView!
     
     lazy var collectionViewFlowLayout : CustomCollectionViewFlowLayout = {
-        let layout = CustomCollectionViewFlowLayout(display: .grid)
+        let layout = CustomCollectionViewFlowLayout(display: .list, containerWidth: self.view.bounds.width)
         return layout
     }()
     
@@ -30,18 +30,18 @@ class ViewController: UIViewController {
             self?.collectionView.reloadData()
         }
         
-        self.dataSource.data.value = [.red, .orange, .cyan, .purple, .yellow, .magenta] 
+        self.dataSource.data.value = [.red, .orange, .cyan, .purple, .yellow, .magenta, .red, .orange, .cyan, .purple, .yellow, .magenta] 
     }
-
-    @IBAction func layoutValueChanged(_ sender: UISegmentedControl) {
-        
-        switch sender.selectedSegmentIndex {
-        case 1:
-            self.collectionViewFlowLayout.display = .list
-        case 2:
-            self.collectionViewFlowLayout.display = .inline
-        default:
-            self.collectionViewFlowLayout.display = .grid
-        }
+    
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        self.reloadCollectionViewLayout(self.view.bounds.size.width)
+    }
+    
+    private func reloadCollectionViewLayout(_ width: CGFloat) {
+     
+        self.collectionViewFlowLayout.containerWidth = width
+        self.collectionViewFlowLayout.display = self.view.traitCollection.horizontalSizeClass == .compact && self.view.traitCollection.verticalSizeClass == .regular ? CollectionDisplay.list : CollectionDisplay.grid(columns: 4)
+     
     }
 }
